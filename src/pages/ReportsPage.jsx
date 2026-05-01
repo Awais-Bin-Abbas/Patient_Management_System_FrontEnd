@@ -6,7 +6,6 @@ import Button from '../components/Button'
 import Badge from '../components/Badge'
 import Loader from '../components/Loader'
 import axiosInstance from '../api/axiosInstance'
-
 import { useAuth } from '../context/AuthContext'
 import { useSuperAdmin } from '../context/SuperAdminContext'
 
@@ -15,6 +14,7 @@ const ReportsPage = () => {
   const { selectedHospital } = useSuperAdmin()
   const isSuperAdmin         = user?.role === 'SuperAdmin'
   const isAdmin              = user?.role === 'Admin'
+
   const [history, setHistory]             = useState([])
   const [hospitalStats, setHospitalStats] = useState([])
   const [loading, setLoading]             = useState(true)
@@ -162,7 +162,7 @@ const ReportsPage = () => {
     <Layout title="Reports & Analytics">
       <div className="space-y-6">
 
-        {/* Global Hospital Stats (Admin/SuperAdmin Only) - Hide if a specific hospital is selected */}
+        {/* Global Hospital Stats — Admin/SuperAdmin only */}
         {(isAdmin || isSuperAdmin) && !selectedHospital && hospitalStats.length > 0 && (
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -172,7 +172,9 @@ const ReportsPage = () => {
               {hospitalStats.map(stat => (
                 <div key={stat.hospital_id} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{stat.hospital_name}</span>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                      {stat.hospital_name}
+                    </span>
                     <Badge status={stat.is_active ? 'active' : 'inactive'} />
                   </div>
                   <div className="flex items-center gap-6">
@@ -196,31 +198,26 @@ const ReportsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-gray-800">
-                {isSuperAdmin ? `Generate Report — ${selectedHospital?.name || 'Select Hospital'}` : 'Generate New Report'}
+                {isSuperAdmin
+                  ? `Generate Report — ${selectedHospital?.name || 'Select Hospital'}`
+                  : 'Generate New Report'}
               </h2>
               <p className="text-sm text-gray-500 mt-1">
-                {isSuperAdmin 
+                {isSuperAdmin
                   ? `Generates a full analytics report for ${selectedHospital?.name || 'the selected hospital'}.`
                   : 'Generates a full analytics report for your hospital including patient and lead statistics.'}
               </p>
             </div>
-            <Button
-              onClick={handleGenerate}
-              loading={generating}
-              icon="📋"
-            >
+            <Button onClick={handleGenerate} loading={generating} icon="📋">
               {generating ? 'Starting...' : 'Generate Report'}
             </Button>
           </div>
 
-          {/* Polling Indicator */}
           {polling && (
             <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 flex items-center gap-3">
               <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
               <div>
-                <p className="text-sm text-blue-700 font-medium">
-                  Generating report...
-                </p>
+                <p className="text-sm text-blue-700 font-medium">Generating report...</p>
                 <p className="text-xs text-blue-500 mt-0.5">
                   Checking status every 3 seconds. This may take a moment.
                 </p>
@@ -228,7 +225,6 @@ const ReportsPage = () => {
             </div>
           )}
 
-          {/* Error */}
           {error && (
             <div className="mt-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
               {error}
@@ -241,34 +237,25 @@ const ReportsPage = () => {
           <div className="space-y-4">
 
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold text-gray-800">
-                Report Results
-              </h3>
-              <span className="text-xs text-gray-400">
-                — {reportData.hospital}
-              </span>
+              <h3 className="text-base font-semibold text-gray-800">Report Results</h3>
+              <span className="text-xs text-gray-400">— {reportData.hospital}</span>
             </div>
 
             {/* Patient Stats */}
             <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-              <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                👤 Patient Statistics
-              </h4>
+              <h4 className="text-sm font-semibold text-gray-700 mb-4">👤 Patient Statistics</h4>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 {[
-                  { label: 'Total Patients', value: reportData.patients?.total },
+                  { label: 'Total Patients',   value: reportData.patients?.total },
                   { label: 'Chronic Patients', value: reportData.patients?.chronic },
                 ].map((item, i) => (
                   <div key={i} className="bg-gray-50 rounded-xl p-4">
                     <p className="text-xs text-gray-500">{item.label}</p>
-                    <p className="text-3xl font-bold text-gray-800 mt-1">
-                      {item.value ?? 0}
-                    </p>
+                    <p className="text-3xl font-bold text-gray-800 mt-1">{item.value ?? 0}</p>
                   </div>
                 ))}
               </div>
 
-              {/* By Condition */}
               {reportData.patients?.by_condition?.length > 0 && (
                 <div>
                   <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
@@ -283,16 +270,13 @@ const ReportsPage = () => {
                             {item.conditions__name || 'Unknown'}
                           </span>
                         </div>
-                        <span className="text-sm font-semibold text-gray-800">
-                          {item.count}
-                        </span>
+                        <span className="text-sm font-semibold text-gray-800">{item.count}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* By Severity */}
               {reportData.patients?.by_severity?.length > 0 && (
                 <div className="mt-4">
                   <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
@@ -307,9 +291,7 @@ const ReportsPage = () => {
                             {item.conditions__severity || 'Unknown'}
                           </span>
                         </div>
-                        <span className="text-sm font-semibold text-gray-800">
-                          {item.count}
-                        </span>
+                        <span className="text-sm font-semibold text-gray-800">{item.count}</span>
                       </div>
                     ))}
                   </div>
@@ -319,26 +301,21 @@ const ReportsPage = () => {
 
             {/* Lead Stats */}
             <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-              <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                🎯 Lead Statistics
-              </h4>
+              <h4 className="text-sm font-semibold text-gray-700 mb-4">🎯 Lead Statistics</h4>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 {[
-                  { label: 'Total Leads',    value: reportData.leads?.total },
-                  { label: 'This Month',      value: reportData.leads?.this_month },
-                  { label: 'Converted',       value: reportData.leads?.converted },
-                  { label: 'Conversion Rate', value: reportData.leads?.conversion_rate },
+                  { label: 'Total Leads',      value: reportData.leads?.total },
+                  { label: 'This Month',        value: reportData.leads?.this_month },
+                  { label: 'Appointed',         value: reportData.leads?.appointed },
+                  { label: 'Appointment Rate',  value: reportData.leads?.appointment_rate },
                 ].map((item, i) => (
                   <div key={i} className="bg-gray-50 rounded-xl p-4">
                     <p className="text-xs text-gray-500">{item.label}</p>
-                    <p className="text-2xl font-bold text-gray-800 mt-1">
-                      {item.value ?? 0}
-                    </p>
+                    <p className="text-2xl font-bold text-gray-800 mt-1">{item.value ?? 0}</p>
                   </div>
                 ))}
               </div>
 
-              {/* By Status */}
               {reportData.leads?.by_status?.length > 0 && (
                 <div>
                   <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
@@ -348,9 +325,7 @@ const ReportsPage = () => {
                     {reportData.leads.by_status.map((item, i) => (
                       <div key={i} className="flex items-center justify-between">
                         <Badge status={item.status} />
-                        <span className="text-sm font-semibold text-gray-800">
-                          {item.count}
-                        </span>
+                        <span className="text-sm font-semibold text-gray-800">{item.count}</span>
                       </div>
                     ))}
                   </div>
@@ -364,9 +339,7 @@ const ReportsPage = () => {
         {/* Report History */}
         <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700">
-              Report History
-            </h3>
+            <h3 className="text-sm font-semibold text-gray-700">Report History</h3>
             {history.length > 0 && (
               <button
                 onClick={handleClearAll}
@@ -382,9 +355,7 @@ const ReportsPage = () => {
           ) : history.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-4xl mb-2">📋</p>
-              <p className="text-sm text-gray-400">
-                No reports generated yet
-              </p>
+              <p className="text-sm text-gray-400">No reports generated yet</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -400,9 +371,7 @@ const ReportsPage = () => {
                   <div className="flex items-center gap-3">
                     <Badge status={report.status} />
                     <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Report #{report.id}
-                      </p>
+                      <p className="text-sm font-medium text-gray-700">Report #{report.id}</p>
                       <p className="text-xs text-gray-400">
                         {new Date(report.created_at).toLocaleString()}
                         {report.completed_at && (

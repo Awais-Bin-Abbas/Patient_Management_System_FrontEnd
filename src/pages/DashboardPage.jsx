@@ -95,7 +95,7 @@ const DashboardPage = () => {
               />
               <StatCard
                 title="Conversion Rate"
-                value={data.conversion_rate ?? '0%'}
+                value={data.appointment_rate ?? '0%'}
                 subtitle="Appointed leads"
                 icon="📈"
                 color="green"
@@ -212,8 +212,8 @@ const DashboardPage = () => {
               color="purple"
             />
             <StatCard
-              title="Conversion Rate"
-              value={data.conversion_rate ?? '0%'}
+              title="Appointment Rate"
+              value={data.appointment_rate ?? '0%'}
               subtitle="Leads appointed"
               icon="📈"
               color="green"

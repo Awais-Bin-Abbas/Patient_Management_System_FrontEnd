@@ -1,32 +1,35 @@
+// src/components/Sidebar.jsx
+
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useSuperAdmin } from '../context/SuperAdminContext'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard',  path: '/dashboard', roles: ['SuperAdmin', 'Admin', 'Doctor', 'Staff'] },
-  { label: 'Patients',   path: '/patients',  roles: ['Admin', 'Doctor'] },
-  { label: 'Leads',      path: '/leads',     roles: ['Admin', 'Doctor'] },
-  { label: 'Leads Criteria',   path: '/criteria',  roles: ['Admin'] },
-  { label: 'Reports',    path: '/reports',   roles: ['Admin'] },
-  { label: 'Hospital',   path: '/hospital',  roles: ['Admin'] },
-  { label: 'Staff',      path: '/staff',     roles: ['Admin'] },
+  { label: 'Dashboard',     path: '/dashboard', roles: ['SuperAdmin', 'Admin', 'Doctor', 'Staff'] },
+  { label: 'Patients',      path: '/patients',  roles: ['SuperAdmin', 'Admin', 'Doctor'] },
+  { label: 'Leads',         path: '/leads',     roles: ['SuperAdmin', 'Admin', 'Doctor'] },
+  { label: 'Lead Criteria', path: '/criteria',  roles: ['SuperAdmin', 'Admin'] },
+  { label: 'Reports',       path: '/reports',   roles: ['SuperAdmin', 'Admin'] },
+  { label: 'Hospital',      path: '/hospital',  roles: ['SuperAdmin', 'Admin'] },
+  { label: 'Staff',         path: '/staff',     roles: ['SuperAdmin', 'Admin'] },
 ]
 
 const SUPERADMIN_ITEMS = [
-  { label: 'All Hospitals',   path: '/hospitals' },
-  { label: 'Global Leads',    path: '/global-leads' },
-  { label: 'Global Reports',  path: '/global-reports' },
-  { label: 'Global Criteria', path: '/global-criteria' },
-  { label: 'Manage Users',    path: '/manage-users' },
+  { label: 'All Hospitals', path: '/hospitals' },
+  { label: 'All Leads',     path: '/global-leads' },
+  { label: 'All Patients',  path: '/global-patients' },
+  { label: 'All Criteria',  path: '/global-criteria' },
+  { label: 'All Reports',   path: '/global-reports' },
+  { label: 'Manage Users',  path: '/manage-users' },
 ]
 
 const HOSPITAL_MGMT_ITEMS = [
-  { label: 'Patients',  path: '/patients' },
-  { label: 'Leads',     path: '/leads' },
-  { label: 'Leads Criteria',  path: '/criteria' },
-  { label: 'Reports',   path: '/reports' },
-  { label: 'Hospital',  path: '/hospital' },
-  { label: 'Staff',     path: '/staff' },
+  { label: 'Patients',      path: '/patients' },
+  { label: 'Leads',         path: '/leads' },
+  { label: 'Lead Criteria', path: '/criteria' },
+  { label: 'Reports',       path: '/reports' },
+  { label: 'Hospital',      path: '/hospital' },
+  { label: 'Staff',         path: '/staff' },
 ]
 
 const linkClass = ({ isActive }) =>
@@ -119,6 +122,13 @@ const Sidebar = () => {
           </>
         )}
       </nav>
+
+      {/* MFA Setup — above sign out */}
+      <div className="px-3 pb-2 border-t border-gray-100 pt-3">
+        <NavLink to="/mfa-setup" className={linkClass}>
+          🔐 MFA Setup
+        </NavLink>
+      </div>
 
       {/* User info + logout */}
       <div className="px-4 py-4 border-t border-gray-100 flex items-center justify-between gap-2">

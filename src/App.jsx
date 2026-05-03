@@ -28,6 +28,8 @@ import SuperAdminLeadsPage     from './pages/SuperAdminLeadsPage'
 import ManageUsersPage         from './pages/ManageUsersPage'
 import SuperAdminReportsPage   from './pages/SuperAdminReportsPage'
 import SuperAdminCriteriaPage  from './pages/SuperAdminCriteriaPage'
+import SuperAdminPatientsPage from './pages/SuperAdminPatientsPage'
+
 
 const App = () => {
   return (
@@ -130,6 +132,12 @@ const App = () => {
             <Route path="/global-criteria" element={
               <ProtectedRoute allowedRoles={['SuperAdmin']}>
                 <SuperAdminCriteriaPage />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/global-patients" element={
+              <ProtectedRoute allowedRoles={['SuperAdmin']}>
+                <SuperAdminPatientsPage />
               </ProtectedRoute>
             } />
 

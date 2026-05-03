@@ -7,7 +7,6 @@ import Button from '../components/Button'
 import Modal from '../components/Modal'
 import Badge from '../components/Badge'
 import axiosInstance from '../api/axiosInstance'
-
 import { useAuth } from '../context/AuthContext'
 import { useSuperAdmin } from '../context/SuperAdminContext'
 
@@ -16,6 +15,7 @@ const LeadCriteriaPage = () => {
   const { selectedHospital } = useSuperAdmin()
   const isSuperAdmin         = user?.role === 'SuperAdmin'
   const isAdmin              = user?.role === 'Admin'
+
   const [criteria, setCriteria]     = useState([])
   const [loading, setLoading]       = useState(true)
   const [showModal, setShowModal]   = useState(false)
@@ -42,28 +42,28 @@ const LeadCriteriaPage = () => {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { 
+  useEffect(() => {
     if (isSuperAdmin && !selectedHospital) {
       setCriteria([])
       setLoading(false)
       return
     }
-    fetchCriteria() 
+    fetchCriteria()
   }, [selectedHospital, isSuperAdmin])
 
   // ─── Build Criteria JSON ──────────────────────────────────────────────────
 
   const buildCriteriaJson = () => {
     const obj = {}
-    if (form.condition)      obj.condition  = form.condition
-    if (form.severity)       obj.severity   = form.severity
-    if (form.is_chronic !== '') obj.is_chronic = form.is_chronic === 'true'
-    if (form.min_age)        obj.min_age    = parseInt(form.min_age)
-    if (form.max_age)        obj.max_age    = parseInt(form.max_age)
+    if (form.condition)          obj.condition  = form.condition
+    if (form.severity)           obj.severity   = form.severity
+    if (form.is_chronic !== '')  obj.is_chronic = form.is_chronic === 'true'
+    if (form.min_age)            obj.min_age    = parseInt(form.min_age)
+    if (form.max_age)            obj.max_age    = parseInt(form.max_age)
     return obj
   }
 
-  // ─── Create Criteria ──────────────────────────────────────────────────────
+  // ─── Submit ───────────────────────────────────────────────────────────────
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -71,7 +71,6 @@ const LeadCriteriaPage = () => {
     setError('')
 
     const criteriaJson = buildCriteriaJson()
-
     if (Object.keys(criteriaJson).length === 0) {
       setError('Please fill at least one criteria field.')
       setSubmitting(false)
@@ -79,18 +78,12 @@ const LeadCriteriaPage = () => {
     }
 
     try {
-      const payload = {
-        name:      form.name,
-        criteria:  criteriaJson,
-        is_active: true
-      }
-
+      const payload = { name: form.name, criteria: criteriaJson, is_active: true }
       if (editMode) {
         await axiosInstance.patch(`/api/lead/criteria/${editingId}/update/`, payload)
       } else {
         await axiosInstance.post('/api/lead/criteria/create/', payload)
       }
-
       setShowModal(false)
       resetForm()
       fetchCriteria()
@@ -106,10 +99,7 @@ const LeadCriteriaPage = () => {
   }
 
   const resetForm = () => {
-    setForm({
-      name: '', condition: '', severity: '',
-      is_chronic: '', min_age: '', max_age: ''
-    })
+    setForm({ name: '', condition: '', severity: '', is_chronic: '', min_age: '', max_age: '' })
     setEditMode(false)
     setEditingId(null)
     setError('')
@@ -128,8 +118,6 @@ const LeadCriteriaPage = () => {
     setEditingId(c.id)
     setShowModal(true)
   }
-
-  // ─── Deactivate Criteria ──────────────────────────────────────────────────
 
   const handleDeactivate = async (id, name) => {
     if (!window.confirm(`Deactivate criteria "${name}"?`)) return
@@ -155,10 +143,7 @@ const LeadCriteriaPage = () => {
       render: (row) => (
         <div className="flex flex-wrap gap-1">
           {Object.entries(row.criteria || {}).map(([k, v]) => (
-            <span
-              key={k}
-              className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full"
-            >
+            <span key={k} className="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full">
               {k}: {String(v)}
             </span>
           ))}
@@ -167,9 +152,7 @@ const LeadCriteriaPage = () => {
     },
     {
       key: 'is_active', label: 'Status',
-      render: (row) => (
-        <Badge status={row.is_active ? 'active' : 'inactive'} />
-      )
+      render: (row) => <Badge status={row.is_active ? 'active' : 'inactive'} />
     },
     {
       key: 'created_at', label: 'Created',
@@ -212,28 +195,27 @@ const LeadCriteriaPage = () => {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-800">
-              {isSuperAdmin ? `Lead Criteria — ${selectedHospital?.name || 'Select Hospital'}` : 'Lead Criteria'}
+              {isSuperAdmin
+                ? `Lead Criteria — ${selectedHospital?.name || 'Select Hospital'}`
+                : 'Lead Criteria'
+              }
             </h3>
             <p className="text-sm text-gray-500">
-              {isSuperAdmin ? 'Managing rules for the selected facility' : `${criteria.length} criteria rules active`}
+              {isSuperAdmin
+                ? 'Managing rules for the selected facility'
+                : `${criteria.length} criteria rules`
+              }
             </p>
           </div>
           {(isAdmin || isSuperAdmin) && (
-            <Button 
-              onClick={() => { resetForm(); setShowModal(true) }} 
+            <Button
+              onClick={() => { resetForm(); setShowModal(true) }}
               icon="➕"
               disabled={isSuperAdmin && !selectedHospital}
             >
               Create Criteria
             </Button>
           )}
-        </div>
-
-        {/* Info Banner */}
-        <div className="bg-blue-50 rounded-xl px-4 py-3 text-sm text-blue-700 border border-blue-100">
-          💡 Criteria rules are used to automatically identify patients as leads.
-          Patients matching ALL criteria fields will be added as leads when you
-          click Generate Leads.
         </div>
 
         {/* Table */}
@@ -248,11 +230,11 @@ const LeadCriteriaPage = () => {
 
       </div>
 
-      {/* Create Criteria Modal */}
+      {/* Create / Edit Modal */}
       <Modal
         isOpen={showModal}
         onClose={() => { setShowModal(false); resetForm() }}
-        title={editMode ? "Update Lead Criteria" : "Create Lead Criteria"}
+        title={editMode ? 'Update Lead Criteria' : 'Create Lead Criteria'}
         size="md"
       >
         {error && (
@@ -266,8 +248,6 @@ const LeadCriteriaPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
-          {/* Name */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Criteria Name <span className="text-red-400">*</span>
@@ -281,12 +261,9 @@ const LeadCriteriaPage = () => {
             />
           </div>
 
-          {/* Condition + Severity */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Condition
-              </label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Condition</label>
               <input
                 value={form.condition}
                 onChange={(e) => setForm({ ...form, condition: e.target.value })}
@@ -295,9 +272,7 @@ const LeadCriteriaPage = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Severity
-              </label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Severity</label>
               <select
                 value={form.severity}
                 onChange={(e) => setForm({ ...form, severity: e.target.value })}
@@ -311,16 +286,11 @@ const LeadCriteriaPage = () => {
             </div>
           </div>
 
-          {/* Min Age + Max Age */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Min Age
-              </label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Min Age</label>
               <input
-                type="number"
-                min="0"
-                max="120"
+                type="number" min="0" max="120"
                 value={form.min_age}
                 onChange={(e) => setForm({ ...form, min_age: e.target.value })}
                 placeholder="e.g. 50"
@@ -328,13 +298,9 @@ const LeadCriteriaPage = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Max Age
-              </label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Max Age</label>
               <input
-                type="number"
-                min="0"
-                max="120"
+                type="number" min="0" max="120"
                 value={form.max_age}
                 onChange={(e) => setForm({ ...form, max_age: e.target.value })}
                 placeholder="e.g. 80"
@@ -343,11 +309,8 @@ const LeadCriteriaPage = () => {
             </div>
           </div>
 
-          {/* Chronic Status */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Chronic Status
-            </label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Chronic Status</label>
             <select
               value={form.is_chronic}
               onChange={(e) => setForm({ ...form, is_chronic: e.target.value })}
@@ -359,18 +322,12 @@ const LeadCriteriaPage = () => {
             </select>
           </div>
 
-          {/* Preview */}
           {Object.keys(buildCriteriaJson()).length > 0 && (
             <div className="bg-gray-50 rounded-lg px-4 py-3">
-              <p className="text-xs font-medium text-gray-500 mb-2">
-                Criteria Preview:
-              </p>
+              <p className="text-xs font-medium text-gray-500 mb-2">Criteria Preview:</p>
               <div className="flex flex-wrap gap-1">
                 {Object.entries(buildCriteriaJson()).map(([k, v]) => (
-                  <span
-                    key={k}
-                    className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full"
-                  >
+                  <span key={k} className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">
                     {k}: {String(v)}
                   </span>
                 ))}
@@ -378,19 +335,14 @@ const LeadCriteriaPage = () => {
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
-            <Button
-              variant="secondary"
-              onClick={() => { setShowModal(false); resetForm() }}
-            >
+            <Button variant="secondary" onClick={() => { setShowModal(false); resetForm() }}>
               Cancel
             </Button>
             <Button type="submit" loading={submitting}>
               {editMode ? 'Update Criteria' : 'Create Criteria'}
             </Button>
           </div>
-
         </form>
       </Modal>
     </Layout>

@@ -8,15 +8,18 @@ import Modal from '../components/Modal'
 import Badge from '../components/Badge'
 import axiosInstance from '../api/axiosInstance'
 
+const ROLES = ['Admin', 'Doctor', 'User']
+
 const ManageUsersPage = () => {
-  const [users, setUsers]             = useState([])
-  const [hospitals, setHospitals]     = useState([])
-  const [loading, setLoading]         = useState(true)
+  const [users, setUsers]           = useState([])
+  const [hospitals, setHospitals]   = useState([])
+  const [loading, setLoading]       = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal]     = useState(false)
   const [selectedUser, setSelectedUser]       = useState(null)
-  const [submitting, setSubmitting]   = useState(false)
-  const [error, setError]             = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [roleChanging, setRoleChanging] = useState(null) // tracks which user's role is being changed
+  const [error, setError]           = useState('')
   const [hospitalFilter, setHospitalFilter] = useState('')
 
   const [createForm, setCreateForm] = useState({
@@ -27,7 +30,7 @@ const ManageUsersPage = () => {
     username: '', email: '', role: '', hospital_id: ''
   })
 
-  // ─── Fetch Users ──────────────────────────────────────────────────────────
+  // ─── Fetch ────────────────────────────────────────────────────────────────
 
   const fetchUsers = () => {
     setLoading(true)
@@ -44,13 +47,37 @@ const ManageUsersPage = () => {
       .catch(() => setHospitals([]))
   }
 
-  useEffect(() => {
-    fetchHospitals()
-  }, [])
+  useEffect(() => { fetchHospitals() }, [])
 
   useEffect(() => {
     fetchUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hospitalFilter])
+
+  // ─── Inline Role Change ───────────────────────────────────────────────────
+
+  const handleRoleChange = async (user, newRole) => {
+    if (newRole === user.role) return
+    if (!window.confirm(`Change ${user.username}'s role from "${user.role}" to "${newRole}"?`)) return
+
+    setRoleChanging(user.id)
+    try {
+      await axiosInstance.patch(`/api/superadmin/users/${user.id}/edit/`, {
+        username:    user.username,
+        email:       user.email,
+        role:        newRole,
+        hospital_id: user.hospital_id,
+      })
+      // Update locally without refetching
+      setUsers(prev => prev.map(u =>
+        u.id === user.id ? { ...u, role: newRole } : u
+      ))
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to change role.')
+    } finally {
+      setRoleChanging(null)
+    }
+  }
 
   // ─── Create User ──────────────────────────────────────────────────────────
 
@@ -105,7 +132,7 @@ const ManageUsersPage = () => {
     if (!window.confirm(`Permanently delete "${user.username}"? This cannot be undone.`)) return
     try {
       await axiosInstance.delete(`/api/superadmin/users/${user.id}/delete/`)
-      fetchUsers()
+      setUsers(prev => prev.filter(u => u.id !== user.id))
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to delete user.')
     }
@@ -131,13 +158,25 @@ const ManageUsersPage = () => {
     {
       key: 'role', label: 'Role',
       render: (row) => (
-        <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-          row.role === 'Admin'  ? 'bg-purple-100 text-purple-700' :
-          row.role === 'Doctor' ? 'bg-blue-100 text-blue-700' :
-          'bg-gray-100 text-gray-700'
-        }`}>
-          {row.role}
-        </span>
+        <div className="flex items-center gap-2">
+          <select
+            value={row.role}
+            disabled={roleChanging === row.id}
+            onChange={(e) => handleRoleChange(row, e.target.value)}
+            className={`px-2 py-1 border rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+              row.role === 'Admin'  ? 'bg-purple-50 border-purple-200 text-purple-700' :
+              row.role === 'Doctor' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+              'bg-gray-50 border-gray-200 text-gray-700'
+            }`}
+          >
+            {ROLES.map(r => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+          {roleChanging === row.id && (
+            <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          )}
+        </div>
       )
     },
     {
@@ -182,7 +221,7 @@ const ManageUsersPage = () => {
           <div>
             <h3 className="text-lg font-bold text-gray-800">All Users</h3>
             <p className="text-sm text-gray-500">
-              Manage Admins and Doctors across all hospitals
+              Manage Admins and Doctors across all hospitals. Change roles directly from the table.
             </p>
           </div>
           <Button onClick={() => { setError(''); setShowCreateModal(true) }} icon="➕">
@@ -276,9 +315,7 @@ const ManageUsersPage = () => {
               onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="Admin">Admin</option>
-              <option value="Doctor">Doctor</option>
-              <option value="User">User</option>
+              {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
           <div>
@@ -342,9 +379,7 @@ const ManageUsersPage = () => {
               onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="Admin">Admin</option>
-              <option value="Doctor">Doctor</option>
-              <option value="User">User</option>
+              {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
           <div>

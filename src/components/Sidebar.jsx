@@ -6,7 +6,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard',  path: '/dashboard', roles: ['SuperAdmin', 'Admin', 'Doctor', 'Staff'] },
   { label: 'Patients',   path: '/patients',  roles: ['Admin', 'Doctor'] },
   { label: 'Leads',      path: '/leads',     roles: ['Admin', 'Doctor'] },
-  { label: 'Criteria',   path: '/criteria',  roles: ['Admin'] },
+  { label: 'Leads Criteria',   path: '/criteria',  roles: ['Admin'] },
   { label: 'Reports',    path: '/reports',   roles: ['Admin'] },
   { label: 'Hospital',   path: '/hospital',  roles: ['Admin'] },
   { label: 'Staff',      path: '/staff',     roles: ['Admin'] },
@@ -23,7 +23,7 @@ const SUPERADMIN_ITEMS = [
 const HOSPITAL_MGMT_ITEMS = [
   { label: 'Patients',  path: '/patients' },
   { label: 'Leads',     path: '/leads' },
-  { label: 'Criteria',  path: '/criteria' },
+  { label: 'Leads Criteria',  path: '/criteria' },
   { label: 'Reports',   path: '/reports' },
   { label: 'Hospital',  path: '/hospital' },
   { label: 'Staff',     path: '/staff' },

@@ -219,7 +219,7 @@ const HospitalPage = () => {
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800">{hospitals[0].name}</h2>
                     <p className="text-sm text-gray-500 mt-1">
-                      Hospital ID: <span className="font-mono text-blue-600">{hospitals[0].slug}</span>
+                      Hospital ID: <span className="font-mono text-blue-600">{hospitals[0].id}</span>
                     </p>
                     <div className="mt-3">
                       <Badge status={hospitals[0].is_active ? 'active' : 'inactive'} />

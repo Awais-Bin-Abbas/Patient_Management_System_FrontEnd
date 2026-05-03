@@ -211,15 +211,6 @@ const PatientsPage = () => {
     <Layout title={isSuperAdmin ? `Patients — ${selectedHospital?.name || 'Select'}` : 'Patients'}>
       <div className="space-y-5">
 
-        {/* SuperAdmin hospital context banner */}
-        {isSuperAdmin && selectedHospital && (
-          <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3">
-            <p className="text-sm text-teal-800">
-              Viewing patients for <strong>{selectedHospital.name}</strong>
-            </p>
-          </div>
-        )}
-
         {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">

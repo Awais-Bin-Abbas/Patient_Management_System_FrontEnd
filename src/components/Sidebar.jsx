@@ -6,12 +6,12 @@ import { useSuperAdmin } from '../context/SuperAdminContext'
 
 const NAV_ITEMS = [
   { label: 'Dashboard',     path: '/dashboard', roles: ['SuperAdmin', 'Admin', 'Doctor', 'Staff'] },
-  { label: 'Patients',      path: '/patients',  roles: ['SuperAdmin', 'Admin', 'Doctor'] },
-  { label: 'Leads',         path: '/leads',     roles: ['SuperAdmin', 'Admin', 'Doctor'] },
-  { label: 'Lead Criteria', path: '/criteria',  roles: ['SuperAdmin', 'Admin'] },
-  { label: 'Reports',       path: '/reports',   roles: ['SuperAdmin', 'Admin'] },
-  { label: 'Hospital',      path: '/hospital',  roles: ['SuperAdmin', 'Admin'] },
-  { label: 'Staff',         path: '/staff',     roles: ['SuperAdmin', 'Admin'] },
+  { label: 'Patients',      path: '/patients',  roles: ['Admin', 'Doctor'] },
+  { label: 'Leads',         path: '/leads',     roles: ['Admin', 'Doctor'] },
+  { label: 'Lead Criteria', path: '/criteria',  roles: ['Admin'] },
+  { label: 'Reports',       path: '/reports',   roles: ['Admin'] },
+  { label: 'Hospital',      path: '/hospital',  roles: ['Admin'] },
+  { label: 'Staff',         path: '/staff',     roles: ['Admin'] },
 ]
 
 const SUPERADMIN_ITEMS = [

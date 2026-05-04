@@ -6,6 +6,8 @@ import Table from '../components/Table'
 import Button from '../components/Button'
 import Modal from '../components/Modal'
 import Badge from '../components/Badge'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
 import { useSuperAdmin } from '../context/SuperAdminContext'
@@ -31,6 +33,8 @@ const LeadCriteriaPage = () => {
     min_age:    '',
     max_age:    '',
   })
+
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(criteria)
 
   // ─── Fetch Criteria ───────────────────────────────────────────────────────
 
@@ -222,9 +226,16 @@ const LeadCriteriaPage = () => {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
           <Table
             columns={columns}
-            data={criteria}
+            data={paginated}
             loading={loading}
             emptyMessage="No criteria yet. Create one to start generating leads."
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
           />
         </div>
 

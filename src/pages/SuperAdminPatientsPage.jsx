@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Table from '../components/Table'
 import Badge from '../components/Badge'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 import { useSuperAdmin } from '../context/SuperAdminContext'
 
@@ -60,6 +62,8 @@ const SuperAdminPatientsPage = () => {
       : true
     return matchesHospital && matchesChronic && matchesSearch
   })
+
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(filtered)
 
   // ─── Table Columns ────────────────────────────────────────────────────────
 
@@ -195,9 +199,16 @@ const SuperAdminPatientsPage = () => {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
           <Table
             columns={columns}
-            data={filtered}
+            data={paginated}
             loading={loading}
             emptyMessage="No patients found."
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
           />
         </div>
 

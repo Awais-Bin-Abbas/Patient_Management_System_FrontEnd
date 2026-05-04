@@ -6,6 +6,8 @@ import Table from '../components/Table'
 import Button from '../components/Button'
 import Modal from '../components/Modal'
 import Badge from '../components/Badge'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
 import { useSuperAdmin } from '../context/SuperAdminContext'
@@ -29,6 +31,8 @@ const StaffPage = () => {
 
   console.log('StaffPage - isSuperAdmin:', isSuperAdmin)
   console.log('StaffPage - selectedHospital:', selectedHospital)
+
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(staff)
 
   // ─── Fetch Staff ──────────────────────────────────────────────────────────
 
@@ -172,9 +176,16 @@ const StaffPage = () => {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <Table
             columns={columns}
-            data={staff}
+            data={paginated}
             loading={loading}
             emptyMessage="No staff members found."
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
           />
         </div>
 

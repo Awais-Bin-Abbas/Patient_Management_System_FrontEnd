@@ -7,6 +7,8 @@ import Table from '../components/Table'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Modal from '../components/Modal'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 import { useSuperAdmin } from '../context/SuperAdminContext'
 
@@ -108,6 +110,8 @@ const SuperAdminCriteriaPage = () => {
   const filtered = hospitalFilter
     ? criteria.filter(c => String(c.hospital_id) === hospitalFilter)
     : criteria
+
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(filtered)
 
   // ─── Table Columns ────────────────────────────────────────────────────────
 
@@ -226,9 +230,16 @@ const SuperAdminCriteriaPage = () => {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
           <Table
             columns={columns}
-            data={filtered}
+            data={paginated}
             loading={loading}
             emptyMessage="No lead criteria found."
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
           />
         </div>
 

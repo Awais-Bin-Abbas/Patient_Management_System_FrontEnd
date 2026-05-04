@@ -6,6 +6,8 @@ import Table from '../components/Table'
 import Button from '../components/Button'
 import Modal from '../components/Modal'
 import Badge from '../components/Badge'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 
 const ROLES = ['Admin', 'Doctor', 'User']
@@ -29,6 +31,8 @@ const ManageUsersPage = () => {
   const [editForm, setEditForm] = useState({
     username: '', email: '', role: '', hospital_id: ''
   })
+
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(users)
 
   // ─── Fetch ────────────────────────────────────────────────────────────────
 
@@ -259,9 +263,16 @@ const ManageUsersPage = () => {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <Table
             columns={columns}
-            data={users}
+            data={paginated}
             loading={loading}
             emptyMessage="No users found."
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
           />
         </div>
 

@@ -7,6 +7,8 @@ import Table from '../components/Table'
 import Modal from '../components/Modal'
 import Button from '../components/Button'
 import Badge from '../components/Badge'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
 import { useSuperAdmin } from '../context/SuperAdminContext'
@@ -38,6 +40,8 @@ const PatientsPage = () => {
     contact_info: '',
     is_chronic:   false
   })
+
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(patients)
 
   // ─── Fetch Patients ───────────────────────────────────────────────────────
 
@@ -296,9 +300,16 @@ const PatientsPage = () => {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
           <Table
             columns={columns}
-            data={patients}
+            data={paginated}
             loading={loading}
             emptyMessage="No patients found. Create one to get started."
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
           />
         </div>
 

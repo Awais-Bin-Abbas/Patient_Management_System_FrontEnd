@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Table from '../components/Table'
 import Badge from '../components/Badge'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 import { useSuperAdmin } from '../context/SuperAdminContext'
 
@@ -117,6 +119,16 @@ const SuperAdminLeadsPage = () => {
       return notDone && matchHospital && matchSearch
     })
     .sort((a, b) => (b.priority_score ?? 0) - (a.priority_score ?? 0))
+
+  const {
+    paginated: paginatedAll, currentPage: pageAll, totalPages: totalPagesAll,
+    totalItems: totalItemsAll, pageSize: pageSizeAll, goToPage: goToPageAll,
+  } = usePagination(filtered)
+
+  const {
+    paginated: paginatedPriority, currentPage: pagePriority, totalPages: totalPagesPriority,
+    totalItems: totalItemsPriority, pageSize: pageSizePriority, goToPage: goToPagePriority,
+  } = usePagination(priorityFiltered)
 
   // ─── Shared action cell ───────────────────────────────────────────────────
 
@@ -331,9 +343,16 @@ const SuperAdminLeadsPage = () => {
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
             <Table
               columns={allColumns}
-              data={filtered}
+              data={paginatedAll}
               loading={loading}
               emptyMessage="No leads found."
+            />
+            <Pagination
+              currentPage={pageAll}
+              totalPages={totalPagesAll}
+              onPageChange={goToPageAll}
+              totalItems={totalItemsAll}
+              pageSize={pageSizeAll}
             />
           </div>
         )}
@@ -358,9 +377,16 @@ const SuperAdminLeadsPage = () => {
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
               <Table
                 columns={priorityColumns}
-                data={priorityFiltered}
+                data={paginatedPriority}
                 loading={loading}
                 emptyMessage="No active leads to rank."
+              />
+              <Pagination
+                currentPage={pagePriority}
+                totalPages={totalPagesPriority}
+                onPageChange={goToPagePriority}
+                totalItems={totalItemsPriority}
+                pageSize={pageSizePriority}
               />
             </div>
           </>

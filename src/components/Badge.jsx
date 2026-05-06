@@ -11,7 +11,7 @@ const Badge = ({ status }) => {
     failed: 'bg-red-100 text-red-700',
     Admin: 'bg-blue-100 text-blue-700',
     Doctor: 'bg-teal-100 text-teal-700',
-    User: 'bg-gray-100 text-gray-600',
+    Staff: 'bg-indigo-100 text-indigo-700',
   }
 
   return (

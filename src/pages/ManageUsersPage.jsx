@@ -10,7 +10,7 @@ import Pagination from '../components/Pagination'
 import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 
-const ROLES = ['Admin', 'Doctor', 'User']
+const ROLES = ['Admin', 'Doctor', 'Staff']
 
 const ManageUsersPage = () => {
   const [users, setUsers]           = useState([])
@@ -225,7 +225,7 @@ const ManageUsersPage = () => {
           <div>
             <h3 className="text-lg font-bold text-gray-800">All Users</h3>
             <p className="text-sm text-gray-500">
-              Manage Admins and Doctors across all hospitals. Change roles directly from the table.
+              Manage Admins, Doctors and Staff across all hospitals. Change roles directly from the table.
             </p>
           </div>
           <Button onClick={() => { setError(''); setShowCreateModal(true) }} icon="➕">

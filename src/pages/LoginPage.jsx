@@ -29,7 +29,7 @@ const LoginPage = () => {
 
       // Use React Router navigation instead of window.location.href
       // Full page reloads during state updates freeze the browser
-      if (!userData.hospital && (userData.role === 'Admin' || userData.role === 'Doctor')) {
+      if (!userData.hospital && (userData.role === 'Admin' || userData.role === 'Doctor' || userData.role === 'Staff')) {
         navigate('/no-hospital', { replace: true })
       } else {
         navigate('/dashboard', { replace: true })

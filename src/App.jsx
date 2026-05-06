@@ -29,6 +29,12 @@ import ManageUsersPage         from './pages/ManageUsersPage'
 import SuperAdminReportsPage   from './pages/SuperAdminReportsPage'
 import SuperAdminCriteriaPage  from './pages/SuperAdminCriteriaPage'
 import SuperAdminPatientsPage from './pages/SuperAdminPatientsPage'
+import DoctorReportsPage        from './pages/DoctorReportsPage'
+import StaffPatientsPage        from './pages/StaffPatientsPage'
+import StaffPatientDetailPage   from './pages/StaffPatientDetailPage'
+import StaffLeadsPage           from './pages/StaffLeadsPage'
+import StaffReportsPage         from './pages/StaffReportsPage'
+import StaffCriteriaPage        from './pages/StaffCriteriaPage'
 
 
 const App = () => {
@@ -91,6 +97,13 @@ const App = () => {
               </ProtectedRoute>
             } />
 
+            {/* Doctor — My Reports */}
+            <Route path="/my-reports" element={
+              <ProtectedRoute allowedRoles={['Doctor']}>
+                <DoctorReportsPage />
+              </ProtectedRoute>
+            } />
+
             {/* Admin + SuperAdmin only */}
             <Route path="/criteria" element={
               <ProtectedRoute allowedRoles={['SuperAdmin', 'Admin']}>
@@ -138,6 +151,33 @@ const App = () => {
             <Route path="/global-patients" element={
               <ProtectedRoute allowedRoles={['SuperAdmin']}>
                 <SuperAdminPatientsPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Staff — restricted read-only pages */}
+            <Route path="/staff/patients" element={
+              <ProtectedRoute allowedRoles={['Staff']}>
+                <StaffPatientsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/patients/:id" element={
+              <ProtectedRoute allowedRoles={['Staff']}>
+                <StaffPatientDetailPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/leads" element={
+              <ProtectedRoute allowedRoles={['Staff']}>
+                <StaffLeadsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/reports" element={
+              <ProtectedRoute allowedRoles={['Staff']}>
+                <StaffReportsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/staff/criteria" element={
+              <ProtectedRoute allowedRoles={['Staff']}>
+                <StaffCriteriaPage />
               </ProtectedRoute>
             } />
 

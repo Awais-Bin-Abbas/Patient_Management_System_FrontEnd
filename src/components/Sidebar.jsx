@@ -5,13 +5,18 @@ import { useAuth } from '../context/AuthContext'
 import { useSuperAdmin } from '../context/SuperAdminContext'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard',     path: '/dashboard', roles: ['SuperAdmin', 'Admin', 'Doctor', 'Staff'] },
-  { label: 'Patients',      path: '/patients',  roles: ['Admin', 'Doctor'] },
-  { label: 'Leads',         path: '/leads',     roles: ['Admin', 'Doctor'] },
-  { label: 'Lead Criteria', path: '/criteria',  roles: ['Admin'] },
-  { label: 'Reports',       path: '/reports',   roles: ['Admin'] },
-  { label: 'Hospital',      path: '/hospital',  roles: ['Admin'] },
-  { label: 'Staff',         path: '/staff',     roles: ['Admin'] },
+  { label: 'Dashboard',     path: '/dashboard',       roles: ['SuperAdmin', 'Admin', 'Doctor', 'Staff'] },
+  { label: 'Patients',      path: '/patients',        roles: ['Admin', 'Doctor'] },
+  { label: 'Leads',         path: '/leads',           roles: ['Admin', 'Doctor'] },
+  { label: 'My Reports',    path: '/my-reports',      roles: ['Doctor'] },
+  { label: 'Lead Criteria', path: '/criteria',        roles: ['Admin'] },
+  { label: 'Reports',       path: '/reports',         roles: ['Admin'] },
+  { label: 'Hospital',      path: '/hospital',        roles: ['Admin'] },
+  { label: 'Staff',         path: '/staff',           roles: ['Admin'] },
+  { label: 'Patients',      path: '/staff/patients',  roles: ['Staff'] },
+  { label: 'Leads',         path: '/staff/leads',     roles: ['Staff'] },
+  { label: 'Reports',       path: '/staff/reports',   roles: ['Staff'] },
+  { label: 'Lead Criteria', path: '/staff/criteria',  roles: ['Staff'] },
 ]
 
 const SUPERADMIN_ITEMS = [

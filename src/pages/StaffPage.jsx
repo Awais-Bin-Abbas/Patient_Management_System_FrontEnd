@@ -115,6 +115,7 @@ const StaffPage = () => {
         <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
           row.role === 'Admin' ? 'bg-purple-100 text-purple-700' :
           row.role === 'Doctor' ? 'bg-blue-100 text-blue-700' :
+          row.role === 'Staff' ? 'bg-indigo-100 text-indigo-700' :
           'bg-gray-100 text-gray-700'
         }`}>
           {row.role}
@@ -232,7 +233,7 @@ const StaffPage = () => {
             >
               <option value="Admin">Admin</option>
               <option value="Doctor">Doctor</option>
-              <option value="User">User</option>
+              <option value="Staff">Staff</option>
             </select>
           </div>
           <div>

@@ -8,6 +8,7 @@ const ForgotPasswordPage = () => {
   const [email, setEmail]       = useState('')
   const [loading, setLoading]   = useState(false)
   const [success, setSuccess]   = useState(false)
+  const [successMsg, setSuccessMsg] = useState('')
   const [error, setError]       = useState('')
 
   const handleSubmit = async (e) => {
@@ -15,7 +16,8 @@ const ForgotPasswordPage = () => {
     setLoading(true)
     setError('')
     try {
-      await axiosInstance.post('/api/auth/forgot-password/', { email })
+      const res = await axiosInstance.post('/api/auth/forgot-password/', { email })
+      setSuccessMsg(res.data.message || '')
       setSuccess(true)
     } catch (err) {
       setError(
@@ -54,6 +56,11 @@ const ForgotPasswordPage = () => {
                 We sent a password reset link to:
               </p>
               <p className="text-sm font-medium text-blue-600 mb-4">{email}</p>
+              {successMsg && (
+                <p className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg px-4 py-2 mb-4">
+                  {successMsg}
+                </p>
+              )}
               <p className="text-xs text-gray-400 mb-6">
                 The link expires in 1 hour. Check your spam folder if
                 you do not see it.

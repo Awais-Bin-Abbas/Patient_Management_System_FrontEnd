@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Badge from '../components/Badge'
 import Loader from '../components/Loader'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 import { useSuperAdmin } from '../context/SuperAdminContext'
 
@@ -73,6 +75,8 @@ const SuperAdminReportsPage = () => {
     ? reports.filter(r => String(r.hospital_id) === hospitalFilter)
     : reports
 
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(filtered)
+
   return (
     <Layout title="Global Reports">
       <div className="space-y-6">
@@ -139,7 +143,7 @@ const SuperAdminReportsPage = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {filtered.map((report) => (
+              {paginated.map((report) => (
                 <div
                   key={report.id}
                   className="flex items-center justify-between bg-gray-50 hover:bg-gray-100 rounded-xl p-4 transition-colors"
@@ -184,6 +188,14 @@ const SuperAdminReportsPage = () => {
                   </div>
                 </div>
               ))}
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                totalItems={totalItems}
+                pageSize={pageSize}
+              />
             </div>
           )}
         </div>

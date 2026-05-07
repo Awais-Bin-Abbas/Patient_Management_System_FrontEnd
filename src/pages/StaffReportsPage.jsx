@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import Layout from '../components/Layout'
 import Badge from '../components/Badge'
 import Loader from '../components/Loader'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 
 const StaffReportsPage = () => {
@@ -10,6 +12,8 @@ const StaffReportsPage = () => {
   const [reportData, setReportData] = useState(null)
   const [activeId, setActiveId]   = useState(null)
   const [error, setError]         = useState('')
+
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(history)
 
   const fetchHistory = useCallback(() => {
     axiosInstance.get('/api/reports/history/')
@@ -172,7 +176,7 @@ const StaffReportsPage = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {history.map((report) => (
+              {paginated.map((report) => (
                 <div
                   key={report.id}
                   className={`flex items-center justify-between rounded-xl p-4 transition-colors ${
@@ -205,6 +209,14 @@ const StaffReportsPage = () => {
                   )}
                 </div>
               ))}
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                totalItems={totalItems}
+                pageSize={pageSize}
+              />
             </div>
           )}
         </div>

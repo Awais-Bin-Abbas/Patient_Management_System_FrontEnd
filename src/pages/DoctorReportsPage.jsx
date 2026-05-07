@@ -57,7 +57,7 @@ const DoctorReportsPage = () => {
     setLoading(true)
     setError('')
     axiosInstance.get('/api/lead/list/')
-      .then(res => setLeads(res.data))
+      .then(res => setLeads(res.data.results || res.data))
       .catch(() => setError('Failed to load leads.'))
       .finally(() => setLoading(false))
   }, [])

@@ -42,8 +42,16 @@ axiosInstance.interceptors.request.use(
     }
 
     // If a hospital is selected (for SuperAdmin flow), attach it to headers
-    // Skip this for auth endpoints to avoid preflight/context issues
-    const isAuthRequest = config.url?.includes('/api/auth/')
+    // Skip only for pure auth operations — NOT for user-listing endpoints under /api/auth/
+    const SKIP_HOSPITAL_HEADER = [
+      '/api/auth/login',
+      '/api/auth/logout',
+      '/api/auth/token/',
+      '/api/auth/forgot-password',
+      '/api/auth/reset-password',
+      '/api/auth/mfa/',
+    ]
+    const isAuthRequest = SKIP_HOSPITAL_HEADER.some(ep => config.url?.includes(ep))
     const savedHospital = localStorage.getItem('selected_hospital')
 
     if (!isAuthRequest && savedHospital) {
@@ -73,10 +81,6 @@ axiosInstance.interceptors.response.use(
       originalRequest.url?.includes('/api/auth/login') ||
       originalRequest.url?.includes('/api/auth/token/refresh')
 
-    if (error.response?.status === 401) {
-      console.warn('[axiosInstance] 401 received for:', originalRequest.url, '| skipRefresh:', skipRefresh, '| _retry:', !!originalRequest._retry)
-    }
-
     if (error.response?.status === 401 && !originalRequest._retry && !skipRefresh) {
       // If already refreshing, queue this request to retry after refresh completes
       if (isRefreshing) {
@@ -101,20 +105,21 @@ axiosInstance.interceptors.response.use(
         })
 
         const newAccessToken = response.data.access
-        saveTokens(newAccessToken, refreshToken)
+        // Save new refresh token too — backends with ROTATE_REFRESH_TOKENS blacklist the old one
+        const newRefreshToken = response.data.refresh || refreshToken
+        saveTokens(newAccessToken, newRefreshToken)
 
         processQueue(null, newAccessToken)
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
-        return axiosInstance(originalRequest)
+        // await the retry so isRefreshing stays true until it completes,
+        // preventing concurrent requests from starting a second refresh cycle
+        return await axiosInstance(originalRequest)
 
       } catch (refreshError) {
-        console.error('[axiosInstance] Token refresh failed — clearing session. Original request:', originalRequest.url)
         processQueue(refreshError, null)
         clearTokens()
         localStorage.removeItem('selected_hospital')
-        
-        // ONLY redirect if we aren't already on the login page to avoid infinite reload loop
         if (window.location.pathname !== '/login') {
           window.location.href = '/login'
         }

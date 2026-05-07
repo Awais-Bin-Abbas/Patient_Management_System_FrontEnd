@@ -38,33 +38,41 @@ const PriorityDot = ({ score }) => {
 const StaffLeadsPage = () => {
   const [leads, setLeads]           = useState([])
   const [loading, setLoading]       = useState(true)
+  const [serverTotal, setServerTotal] = useState(0)
   const [error, setError]           = useState('')
   const [search, setSearch]         = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
-  const fetchLeads = useCallback(() => {
+  const fetchLeads = useCallback((page = 1) => {
     setLoading(true)
     setError('')
-    axiosInstance.get('/api/lead/list/')
-      .then(res => setLeads(Array.isArray(res.data) ? res.data : []))
+    const params = new URLSearchParams()
+    params.append('page', page)
+    if (search) params.append('search', search)
+    if (statusFilter) params.append('status', statusFilter)
+
+    axiosInstance.get(`/api/lead/list/?${params.toString()}`)
+      .then(res => {
+        if (res.data.results) {
+          setLeads(res.data.results)
+          setServerTotal(res.data.count)
+        } else {
+          setLeads(Array.isArray(res.data) ? res.data : [])
+          setServerTotal(Array.isArray(res.data) ? res.data.length : 0)
+        }
+      })
       .catch(() => setError('Failed to load leads. You may not have permission to view this data.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [search, statusFilter])
 
-  useEffect(() => {
-    fetchLeads()
-  }, [fetchLeads])
-
-  const filtered = leads.filter(l => {
-    const matchSearch = !search ||
-      l.patient_name?.toLowerCase().includes(search.toLowerCase()) ||
-      l.criteria_name?.toLowerCase().includes(search.toLowerCase()) ||
-      l.assigned_to_username?.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = !statusFilter || l.status === statusFilter
-    return matchSearch && matchStatus
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(leads, {
+    isServerSide: true,
+    totalItems: serverTotal
   })
 
-  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(filtered)
+  useEffect(() => {
+    fetchLeads(currentPage)
+  }, [fetchLeads, currentPage])
 
   const columns = [
     {
@@ -141,7 +149,7 @@ const StaffLeadsPage = () => {
               </button>
             )}
             <span className="ml-auto text-xs text-gray-400">
-              {loading ? 'Loading...' : `${filtered.length} lead${filtered.length !== 1 ? 's' : ''}`}
+              {loading ? 'Loading...' : `${totalItems} lead${totalItems !== 1 ? 's' : ''}`}
             </span>
           </div>
         </div>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
-import Table from '../components/Table'
 import Button from '../components/Button'
 import Modal from '../components/Modal'
 import Badge from '../components/Badge'
@@ -15,7 +14,6 @@ const HospitalPage = () => {
   const { user }             = useAuth()
   const { selectedHospital } = useSuperAdmin()
   const isSuperAdmin         = user?.role === 'SuperAdmin'
-  const isAdmin              = user?.role === 'Admin'
   const [hospitals, setHospitals]   = useState([])
   const [stats, setStats]           = useState([])
   const [loading, setLoading]       = useState(true)
@@ -129,71 +127,6 @@ const HospitalPage = () => {
       alert('Failed to restore hospital.')
     }
   }
-
-  // ─── Table Columns ────────────────────────────────────────────────────────
-
-  const columns = [
-    {
-      key: 'name', label: 'Hospital',
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-700 text-xs font-bold">
-            🏥
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-800">{row.name}</p>
-            <p className="text-xs text-gray-400">{row.slug}</p>
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'address', label: 'Address',
-      render: (row) => (
-        <span className="text-sm text-gray-600">{row.address}</span>
-      )
-    },
-    {
-      key: 'contact_info', label: 'Contact',
-      render: (row) => (
-        <span className="text-sm text-gray-600">{row.contact_info}</span>
-      )
-    },
-    {
-      key: 'is_active', label: 'Status',
-      render: (row) => (
-        <Badge status={row.is_active ? 'active' : 'inactive'} />
-      )
-    },
-    {
-      key: 'actions', label: 'Actions',
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => handleEdit(row)}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-          >
-            Edit
-          </button>
-          {row.is_active ? (
-            <button
-              onClick={() => handleDeactivate(row.id, row.name)}
-              className="text-xs text-red-400 hover:text-red-600 font-medium"
-            >
-              Deactivate
-            </button>
-          ) : (
-            <button
-              onClick={() => handleRestore(row.id, row.name)}
-              className="text-xs text-green-600 hover:text-green-800 font-medium"
-            >
-              Restore
-            </button>
-          )}
-        </div>
-      )
-    }
-  ]
 
   return (
     <Layout title={isSuperAdmin ? `Hospital Profile — ${selectedHospital?.name || 'Select'}` : 'Hospital Profile'}>

@@ -67,7 +67,6 @@ const LeadsPage = () => {
   const [totalLeads, setTotalLeads]         = useState(0)
   const [totalPriority, setTotalPriority]   = useState(0)
   const [criteria, setCriteria]             = useState([])
-  const [staff, setStaff]                   = useState([])
   const [patients, setPatients]             = useState([])
   const [loading, setLoading]               = useState(true)
   const [generating, setGenerating]         = useState(false)
@@ -174,13 +173,12 @@ const LeadsPage = () => {
 
     axiosInstance.get(staffUrl).then(res => {
       const staffData = res.data.results || res.data
-      setStaff(staffData)
       if (canManage) {
         // Staff list includes all roles — filter to Doctor only for the assign dropdown
         setDoctors(staffData.filter(u => u.role === 'Doctor'))
       }
     }).catch(() => {})
-  }, [selectedHospital])
+  }, [selectedHospital, canManage, isSuperAdmin])
 
   // ─── Generate Leads ───────────────────────────────────────────────────────
 

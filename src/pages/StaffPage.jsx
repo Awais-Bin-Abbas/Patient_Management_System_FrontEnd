@@ -54,7 +54,10 @@ const StaffPage = () => {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchStaff() }, [selectedHospital, isSuperAdmin])
+  useEffect(() => {
+    fetchStaff()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedHospital, isSuperAdmin])
 
   // ─── Create Staff ─────────────────────────────────────────────────────────
 

@@ -17,51 +17,20 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const init = async () => {
-      if (isAuthenticated()) {
-        // Access token present and valid — fetch fresh profile
-        try {
-          const res = await axiosInstance.get('/api/auth/profile/')
+    if (isAuthenticated()) {
+      axiosInstance.get('/api/auth/profile/')
+        .then(res => {
           setUser(res.data)
           localStorage.setItem('user_data', JSON.stringify(res.data))
-        } catch {
+        })
+        .catch(() => {
           clearTokens()
           setUser(null)
-        } finally {
-          setLoading(false)
-        }
-        return
-      }
-
-      // Access token missing or expired — try the refresh token before signing out
-      const refreshToken = getRefreshToken()
-      if (!refreshToken) {
-        setLoading(false)
-        return
-      }
-
-      try {
-        const baseUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000'
-        const res = await axios.post(`${baseUrl}/api/auth/token/refresh/`, {
-          refresh: refreshToken
         })
-        const newAccess  = res.data.access
-        const newRefresh = res.data.refresh || refreshToken
-        saveTokens(newAccess, newRefresh)
-
-        // Fetch profile with the new access token
-        const profile = await axiosInstance.get('/api/auth/profile/')
-        setUser(profile.data)
-        localStorage.setItem('user_data', JSON.stringify(profile.data))
-      } catch {
-        clearTokens()
-        setUser(null)
-      } finally {
-        setLoading(false)
-      }
+        .finally(() => setLoading(false))
+    } else {
+      setLoading(false)
     }
-
-    init()
   }, [])
 
   const login = async (username, password, otp = null) => {

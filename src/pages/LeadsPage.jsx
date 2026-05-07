@@ -64,6 +64,8 @@ const LeadsPage = () => {
   const [activeTab, setActiveTab]           = useState('all')
   const [leads, setLeads]                   = useState([])
   const [priorityLeads, setPriorityLeads]   = useState([])
+  const [totalLeads, setTotalLeads]         = useState(0)
+  const [totalPriority, setTotalPriority]   = useState(0)
   const [criteria, setCriteria]             = useState([])
   const [staff, setStaff]                   = useState([])
   const [patients, setPatients]             = useState([])
@@ -79,9 +81,16 @@ const LeadsPage = () => {
   const [showEditModal, setShowEditModal]         = useState(false)
   const [selectedCriteriaId, setSelectedCriteriaId] = useState('')
   const [editingLead, setEditingLead]       = useState(null)
-  const [editForm, setEditForm]             = useState({ criteria_id: '', assigned_to_id: '' })
+  const [editForm, setEditForm]             = useState({ criteria_id: '', assigned_to: '' })
   const [createForm, setCreateForm]         = useState({ patient_id: '', status: 'new', notes: '' })
   const [submitting, setSubmitting]         = useState(false)
+  const [doctors, setDoctors]               = useState([])
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [assigningLead, setAssigningLead]   = useState(null)
+  const [assignDoctorId, setAssignDoctorId] = useState('')
+  const [assigning, setAssigning]           = useState(false)
+
+  const isDoctor = user?.role === 'Doctor'
 
   useEffect(() => {
     if (!openDropdown) return
@@ -92,30 +101,86 @@ const LeadsPage = () => {
 
   // ─── Fetch ────────────────────────────────────────────────────────────────
 
-  const fetchLeads = useCallback(() => {
+  const fetchLeads = useCallback((page = 1) => {
     setLoading(true)
-    setError('')
-    axiosInstance.get('/api/lead/list/')
-      .then(res => setLeads(res.data))
+    const params = new URLSearchParams()
+    if (search)       params.append('search', search)
+    if (statusFilter) params.append('status', statusFilter)
+    // Doctor: fetch all without page param, filter client-side (backend has no assigned_to filter)
+    // Admin/SuperAdmin: server-side pagination
+    if (!isDoctor) params.append('page', page)
+
+    axiosInstance.get(`/api/lead/list/?${params.toString()}`)
+      .then(res => {
+        const raw = res.data.results ?? res.data
+        const data = isDoctor
+          ? raw.filter(l => l.assigned_to_username === user?.username)
+          : raw
+        setLeads(data)
+        setTotalLeads(isDoctor ? data.length : (res.data.count ?? data.length))
+      })
       .catch(() => setError('Failed to load leads.'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [search, statusFilter, isDoctor, user?.username])
 
-  const fetchPriorityLeads = useCallback(() => {
-    axiosInstance.get('/api/lead/priority-list/')
-      .then(res => setPriorityLeads(res.data))
+  const fetchPriorityLeads = useCallback((page = 1) => {
+    const params = new URLSearchParams()
+    if (search) params.append('search', search)
+    if (!isDoctor) params.append('page', page)
+
+    axiosInstance.get(`/api/lead/priority-list/?${params.toString()}`)
+      .then(res => {
+        const raw = res.data.results ?? res.data
+        const data = isDoctor
+          ? raw.filter(l => l.assigned_to_username === user?.username)
+          : raw
+        setPriorityLeads(data)
+        setTotalPriority(isDoctor ? data.length : (res.data.count ?? data.length))
+      })
       .catch(() => {})
-  }, [])
+  }, [search, isDoctor, user?.username])
+
+  const {
+    paginated: paginatedAll, currentPage: pageAll, totalPages: totalPagesAll,
+    totalItems: totalItemsAll, pageSize: pageSizeAll, goToPage: goToPageAll,
+  } = usePagination(leads, {
+    isServerSide: !isDoctor,
+    totalItems: totalLeads
+  })
+
+  const {
+    paginated: paginatedPriority, currentPage: pagePriority, totalPages: totalPagesPriority,
+    totalItems: totalItemsPriority, pageSize: pageSizePriority, goToPage: goToPagePriority,
+  } = usePagination(priorityLeads, {
+    isServerSide: !isDoctor,
+    totalItems: totalPriority
+  })
 
   useEffect(() => {
-    fetchLeads()
-    fetchPriorityLeads()
-    axiosInstance.get('/api/lead/criteria/list/').then(res => setCriteria(res.data)).catch(() => {})
-    axiosInstance.get('/api/auth/staff/').then(res => setStaff(res.data)).catch(() => {})
+    if (activeTab === 'all') fetchLeads(pageAll)
+    else fetchPriorityLeads(pagePriority)
+  }, [pageAll, pagePriority, activeTab, fetchLeads, fetchPriorityLeads, selectedHospital])
+
+  useEffect(() => {
     if (canManage) {
-      axiosInstance.get('/api/patient/list/').then(res => setPatients(res.data)).catch(() => {})
+      axiosInstance.get('/api/lead/criteria/list/').then(res => setCriteria(res.data)).catch(() => {})
+      axiosInstance.get('/api/patient/list/').then(res => setPatients(res.data.results || res.data)).catch(() => {})
     }
-  }, [fetchLeads, fetchPriorityLeads, selectedHospital])
+
+    // Mirror the exact pattern StaffPage uses — SuperAdmin needs ?hospital_id=, Admin does not
+    const staffUrl = isSuperAdmin && selectedHospital
+      ? `/api/auth/staff/?hospital_id=${selectedHospital.id}`
+      : '/api/auth/staff/'
+
+    axiosInstance.get(staffUrl).then(res => {
+      const staffData = res.data.results || res.data
+      setStaff(staffData)
+      if (canManage) {
+        // Staff list includes all roles — filter to Doctor only for the assign dropdown
+        setDoctors(staffData.filter(u => u.role === 'Doctor'))
+      }
+    }).catch(() => {})
+  }, [selectedHospital])
 
   // ─── Generate Leads ───────────────────────────────────────────────────────
 
@@ -130,8 +195,8 @@ const LeadsPage = () => {
       setGenResult(res.data)
       setShowGenerateModal(false)
       setSelectedCriteriaId('')
-      fetchLeads()
-      fetchPriorityLeads()
+      fetchLeads(pageAll)
+      fetchPriorityLeads(pagePriority)
     } catch (err) {
       setError(err.response?.data?.error || 'Generation failed.')
     } finally {
@@ -149,8 +214,8 @@ const LeadsPage = () => {
       await axiosInstance.post('/api/lead/create/', createForm)
       setShowCreateModal(false)
       setCreateForm({ patient_id: '', status: 'new', notes: '' })
-      fetchLeads()
-      fetchPriorityLeads()
+      fetchLeads(pageAll)
+      fetchPriorityLeads(pagePriority)
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create lead.')
     } finally {
@@ -188,8 +253,8 @@ const LeadsPage = () => {
   const openEdit = (lead) => {
     setEditingLead(lead)
     setEditForm({
-      criteria_id:    lead.criteria_id    || '',
-      assigned_to_id: lead.assigned_to_id || '',
+      criteria_id: lead.criteria_id    || '',
+      assigned_to: lead.assigned_to_id  || '',
     })
     setShowEditModal(true)
   }
@@ -208,42 +273,47 @@ const LeadsPage = () => {
     }
   }
 
+  // ─── Quick Assign Doctor ──────────────────────────────────────────────────
+
+  const handleQuickAssign = async (e) => {
+    e.preventDefault()
+    setAssigning(true)
+    try {
+      const res = await axiosInstance.patch(`/api/lead/${assigningLead.id}/update/`, {
+        assigned_to: assignDoctorId || null
+      })
+      const selectedDoctor = doctors.find(d => d.id.toString() === assignDoctorId.toString())
+      const patch = {
+        ...res.data,
+        assigned_to_id:       selectedDoctor ? selectedDoctor.id : null,
+        assigned_to_username: selectedDoctor ? selectedDoctor.username : null,
+      }
+      setLeads(prev => prev.map(l => l.id === assigningLead.id ? { ...l, ...patch } : l))
+      setPriorityLeads(prev => prev.map(l => l.id === assigningLead.id ? { ...l, ...patch } : l))
+      setShowAssignModal(false)
+      setAssigningLead(null)
+      setAssignDoctorId('')
+    } catch {
+      setError('Failed to assign lead.')
+    } finally {
+      setAssigning(false)
+    }
+  }
+
   // ─── Clear All ────────────────────────────────────────────────────────────
 
   const handleClearAll = async () => {
     if (!window.confirm('Delete ALL leads? This cannot be undone.')) return
     try {
+      // With pagination, "Clear All" is tricky. We should probably have a backend endpoint for this.
+      // For now, clearing what's visible or better, warn user.
       await Promise.all(leads.map(l => axiosInstance.delete(`/api/lead/${l.id}/delete/`)))
-      setLeads([])
-      setPriorityLeads([])
+      fetchLeads(pageAll)
+      fetchPriorityLeads(pagePriority)
     } catch {
-      setError('Failed to clear all leads.')
+      setError('Failed to clear some leads.')
     }
   }
-
-  // ─── Filter ───────────────────────────────────────────────────────────────
-
-  const filtered = leads.filter(l => {
-    const matchesSearch = search
-      ? l.patient_name?.toLowerCase().includes(search.toLowerCase())
-      : true
-    const matchesStatus = statusFilter ? l.status === statusFilter : true
-    return matchesSearch && matchesStatus
-  })
-
-  const filteredPriority = priorityLeads.filter(l =>
-    search ? l.patient_name?.toLowerCase().includes(search.toLowerCase()) : true
-  )
-
-  const {
-    paginated: paginatedAll, currentPage: pageAll, totalPages: totalPagesAll,
-    totalItems: totalItemsAll, pageSize: pageSizeAll, goToPage: goToPageAll,
-  } = usePagination(filtered)
-
-  const {
-    paginated: paginatedPriority, currentPage: pagePriority, totalPages: totalPagesPriority,
-    totalItems: totalItemsPriority, pageSize: pageSizePriority, goToPage: goToPagePriority,
-  } = usePagination(filteredPriority)
 
   // ─── Shared action cell ───────────────────────────────────────────────────
 
@@ -281,6 +351,18 @@ const LeadsPage = () => {
           className="text-xs text-gray-600 hover:text-gray-800 font-medium transition-colors"
         >
           Edit
+        </button>
+      )}
+      {canManage && (
+        <button
+          onClick={() => {
+            setAssigningLead(row)
+            setAssignDoctorId(row.assigned_to_id?.toString() || '')
+            setShowAssignModal(true)
+          }}
+          className="text-xs text-teal-600 hover:text-teal-800 font-medium transition-colors"
+        >
+          Assign
         </button>
       )}
       <button
@@ -384,12 +466,22 @@ const LeadsPage = () => {
           </div>
         )}
 
+        {/* Doctor scope banner */}
+        {isDoctor && (
+          <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-center gap-2">
+            <span className="text-blue-400">👤</span>
+            <p className="text-sm text-blue-700">
+              Showing leads assigned to <strong>{user.username}</strong>
+            </p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">
             {loading ? 'Loading...' : activeTab === 'all'
-              ? `${filtered.length} leads found`
-              : `${filteredPriority.length} leads ranked by priority`
+              ? `${totalItemsAll} leads found`
+              : `${totalItemsPriority} leads ranked by priority`
             }
           </p>
           <div className="flex items-center gap-2">
@@ -656,12 +748,12 @@ const LeadsPage = () => {
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Assigned To</label>
               <select
-                value={editForm.assigned_to_id}
-                onChange={(e) => setEditForm({ ...editForm, assigned_to_id: e.target.value })}
+                value={editForm.assigned_to}
+                onChange={(e) => setEditForm({ ...editForm, assigned_to: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Unassigned</option>
-                {staff.map(s => <option key={s.id} value={s.id}>{s.username}</option>)}
+                {doctors.map(d => <option key={d.id} value={d.id}>{d.username}</option>)}
               </select>
             </div>
             <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
@@ -671,6 +763,53 @@ const LeadsPage = () => {
           </form>
         </Modal>
       )}
+
+      {/* Assign Doctor Modal */}
+      <Modal
+        isOpen={showAssignModal}
+        onClose={() => { setShowAssignModal(false); setAssigningLead(null); setAssignDoctorId('') }}
+        title={`Assign Lead — ${assigningLead?.patient_name}`}
+        size="sm"
+      >
+        <form onSubmit={handleQuickAssign} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Assign to Doctor</label>
+            {doctors.length === 0 ? (
+              <p className="text-sm text-gray-400 py-2 text-center">No doctors available.</p>
+            ) : (
+              <select
+                value={assignDoctorId}
+                onChange={(e) => setAssignDoctorId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Unassigned</option>
+                {doctors.map(d => (
+                  <option key={d.id} value={d.id}>{d.username}</option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {assigningLead?.assigned_to_username && (
+            <p className="text-xs text-gray-400">
+              Currently assigned to:{' '}
+              <span className="font-medium text-gray-600">{assigningLead.assigned_to_username}</span>
+            </p>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+            <Button
+              variant="secondary"
+              onClick={() => { setShowAssignModal(false); setAssigningLead(null); setAssignDoctorId('') }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" loading={assigning} disabled={doctors.length === 0}>
+              Save
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
     </Layout>
   )

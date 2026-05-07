@@ -12,6 +12,7 @@ const ResetPasswordPage = () => {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
   const [success, setSuccess]   = useState(false)
+  const [successMsg, setSuccessMsg] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -29,13 +30,14 @@ const ResetPasswordPage = () => {
 
     setLoading(true)
     try {
-      await axiosInstance.post('/api/auth/reset-password/confirm/', {
+      const res = await axiosInstance.post('/api/auth/reset-password/confirm/', {
         uid,
         token,
         new_password: form.new_password
       })
+      setSuccessMsg(res.data.message || '')
       setSuccess(true)
-      setTimeout(() => navigate('/login'), 3000)
+      setTimeout(() => navigate('/login'), 2000)
     } catch (err) {
       setError(
         err.response?.data?.non_field_errors?.[0] ||
@@ -70,10 +72,10 @@ const ResetPasswordPage = () => {
                 Password Reset!
               </h2>
               <p className="text-sm text-gray-500 mb-1">
-                Your password has been changed successfully.
+                {successMsg || 'Your password has been changed successfully.'}
               </p>
               <p className="text-xs text-gray-400">
-                Redirecting to login in 3 seconds...
+                Redirecting to login in 2 seconds...
               </p>
             </div>
           ) : (

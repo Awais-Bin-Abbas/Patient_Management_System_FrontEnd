@@ -6,6 +6,8 @@ import Layout from '../components/Layout'
 import Badge from '../components/Badge'
 import Button from '../components/Button'
 import Modal from '../components/Modal'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 import { useSuperAdmin } from '../context/SuperAdminContext'
 
@@ -20,6 +22,8 @@ const SuperAdminHospitalsPage = () => {
   const [form, setForm]               = useState({
     name: '', address: '', contact_info: '', slug: ''
   })
+
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(hospitals)
 
   const fetchHospitals = () => {
     setLoading(true)
@@ -105,72 +109,82 @@ const SuperAdminHospitalsPage = () => {
             <p className="text-sm text-gray-400">No hospitals found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {hospitals.map(hospital => (
-              <div
-                key={hospital.id}
-                onClick={() => handleSelectHospital(hospital)}
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-blue-200 transition-all group"
-              >
-                {/* Hospital Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-700 font-bold text-sm">
-                      🏥
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {paginated.map(hospital => (
+                <div
+                  key={hospital.id}
+                  onClick={() => handleSelectHospital(hospital)}
+                  className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-blue-200 transition-all group"
+                >
+                  {/* Hospital Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-700 font-bold text-sm">
+                        🏥
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
+                          {hospital.name}
+                        </h4>
+                        <p className="text-xs text-gray-400">{hospital.address}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-800 group-hover:text-blue-700 transition-colors">
-                        {hospital.name}
-                      </h4>
-                      <p className="text-xs text-gray-400">{hospital.address}</p>
+                    <Badge status={hospital.is_active ? 'active' : 'inactive'} />
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="bg-gray-50 rounded-lg p-3 text-center">
+                      <p className="text-lg font-bold text-gray-800">{hospital.total_patients}</p>
+                      <p className="text-[10px] text-gray-400 uppercase">Patients</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3 text-center">
+                      <p className="text-lg font-bold text-blue-600">{hospital.total_leads}</p>
+                      <p className="text-[10px] text-gray-400 uppercase">Leads</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3 text-center">
+                      <p className="text-lg font-bold text-teal-600">{hospital.total_staff}</p>
+                      <p className="text-[10px] text-gray-400 uppercase">Staff</p>
                     </div>
                   </div>
-                  <Badge status={hospital.is_active ? 'active' : 'inactive'} />
-                </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-lg font-bold text-gray-800">{hospital.total_patients}</p>
-                    <p className="text-[10px] text-gray-400 uppercase">Patients</p>
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <span className="text-xs text-blue-600 font-medium group-hover:underline">
+                      Manage Hospital →
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={(e) => handleToggle(e, hospital)}
+                        className={`text-xs font-medium transition-colors ${
+                          hospital.is_active
+                            ? 'text-orange-400 hover:text-orange-600'
+                            : 'text-green-500 hover:text-green-700'
+                        }`}
+                      >
+                        {hospital.is_active ? 'Deactivate' : 'Activate'}
+                      </button>
+                      <button
+                        onClick={(e) => handleDelete(e, hospital)}
+                        className="text-xs font-medium text-red-400 hover:text-red-600 transition-colors"
+                      >
+                        🗑️ Delete
+                      </button>
+                    </div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-lg font-bold text-blue-600">{hospital.total_leads}</p>
-                    <p className="text-[10px] text-gray-400 uppercase">Leads</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-lg font-bold text-teal-600">{hospital.total_staff}</p>
-                    <p className="text-[10px] text-gray-400 uppercase">Staff</p>
-                  </div>
-                </div>
 
-                {/* Actions */}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                  <span className="text-xs text-blue-600 font-medium group-hover:underline">
-                    Manage Hospital →
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={(e) => handleToggle(e, hospital)}
-                      className={`text-xs font-medium transition-colors ${
-                        hospital.is_active
-                          ? 'text-orange-400 hover:text-orange-600'
-                          : 'text-green-500 hover:text-green-700'
-                      }`}
-                    >
-                      {hospital.is_active ? 'Deactivate' : 'Activate'}
-                    </button>
-                    <button
-                      onClick={(e) => handleDelete(e, hospital)}
-                      className="text-xs font-medium text-red-400 hover:text-red-600 transition-colors"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
                 </div>
+              ))}
+            </div>
 
-              </div>
-            ))}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+            />
           </div>
         )}
 

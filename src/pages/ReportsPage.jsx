@@ -5,6 +5,8 @@ import Layout from '../components/Layout'
 import Button from '../components/Button'
 import Badge from '../components/Badge'
 import Loader from '../components/Loader'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
 import { useSuperAdmin } from '../context/SuperAdminContext'
@@ -24,6 +26,8 @@ const ReportsPage = () => {
   const [activeId, setActiveId]           = useState(null)
   const [error, setError]                 = useState('')
   const intervalRef                       = useRef(null)
+
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(history)
 
   // ─── Fetch History ────────────────────────────────────────────────────────
 
@@ -359,7 +363,7 @@ const ReportsPage = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {history.map((report) => (
+              {paginated.map((report) => (
                 <div
                   key={report.id}
                   className={`flex items-center justify-between rounded-xl p-4 transition-colors ${
@@ -400,6 +404,14 @@ const ReportsPage = () => {
                   </div>
                 </div>
               ))}
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                totalItems={totalItems}
+                pageSize={pageSize}
+              />
             </div>
           )}
         </div>

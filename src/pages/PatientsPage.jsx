@@ -23,6 +23,7 @@ const PatientsPage = () => {
 
   const [patients, setPatients]     = useState([])
   const [loading, setLoading]       = useState(true)
+  const [serverTotal, setServerTotal] = useState(0)
   const [search, setSearch]         = useState('')
   const [filter, setFilter]         = useState({
     condition: '', is_chronic: '', severity: ''
@@ -41,13 +42,17 @@ const PatientsPage = () => {
     is_chronic:   false
   })
 
-  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(patients)
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(patients, {
+    isServerSide: true,
+    totalItems: serverTotal
+  })
 
   // ─── Fetch Patients ───────────────────────────────────────────────────────
 
-  const fetchPatients = useCallback(() => {
+  const fetchPatients = useCallback((page = 1) => {
     setLoading(true)
     const params = new URLSearchParams()
+    params.append('page', page)
     if (search)             params.append('search', search)
     if (filter.condition)   params.append('condition', filter.condition)
     if (filter.is_chronic)  params.append('is_chronic', filter.is_chronic)
@@ -56,14 +61,26 @@ const PatientsPage = () => {
     const baseUrl = `/api/patient/list/`
 
     axiosInstance.get(`${baseUrl}?${params.toString()}`)
-      .then(res => setPatients(res.data))
-      .catch(() => setPatients([]))
+      .then(res => {
+        // Backend returns { results: [...], count: N }
+        if (res.data.results) {
+          setPatients(res.data.results)
+          setServerTotal(res.data.count)
+        } else {
+          setPatients(res.data)
+          setServerTotal(res.data.length)
+        }
+      })
+      .catch(() => {
+        setPatients([])
+        setServerTotal(0)
+      })
       .finally(() => setLoading(false))
   }, [search, filter])
 
   useEffect(() => {
-    fetchPatients()
-  }, [fetchPatients, selectedHospital])
+    fetchPatients(currentPage)
+  }, [fetchPatients, selectedHospital, currentPage])
 
   // ─── Create / Update Patient ──────────────────────────────────────────────
 
@@ -218,7 +235,7 @@ const PatientsPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">
-            {loading ? 'Loading...' : `${patients.length} patients found`}
+            {loading ? 'Loading...' : `${totalItems} patients found`}
           </p>
           <Button onClick={() => { resetForm(); setShowModal(true) }} icon="➕">
             Add Patient

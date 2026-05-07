@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import Button from '../components/Button'
 import Modal from '../components/Modal'
+import Pagination from '../components/Pagination'
+import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 
 const WEIGHT_LABELS = [
@@ -26,6 +28,8 @@ const ConditionWeightsPage = () => {
   const [submitting, setSubmitting]   = useState(false)
   const [error, setError]             = useState('')
   const [form, setForm]               = useState({ condition_name: '', weight: 25 })
+
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(priorities)
 
   const fetchPriorities = () => {
     setLoading(true)
@@ -125,7 +129,7 @@ const ConditionWeightsPage = () => {
         ) : (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="divide-y divide-gray-50">
-              {priorities.map(item => {
+              {paginated.map(item => {
                 const label = getWeightLabel(item.weight)
                 return (
                   <div key={item.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors">
@@ -167,6 +171,13 @@ const ConditionWeightsPage = () => {
                 )
               })}
             </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+            />
           </div>
         )}
 

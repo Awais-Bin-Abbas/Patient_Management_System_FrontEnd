@@ -11,23 +11,39 @@ const StaffPatientsPage = () => {
 
   const [patients, setPatients] = useState([])
   const [loading, setLoading]   = useState(true)
+  const [serverTotal, setServerTotal] = useState(0)
   const [search, setSearch]     = useState('')
 
-  const fetchPatients = useCallback(() => {
+  const fetchPatients = useCallback((page = 1) => {
     setLoading(true)
     const params = new URLSearchParams()
+    params.append('page', page)
     if (search) params.append('search', search)
     axiosInstance.get(`/api/patient/list/?${params.toString()}`)
-      .then(res => setPatients(res.data))
-      .catch(() => setPatients([]))
+      .then(res => {
+        if (res.data.results) {
+          setPatients(res.data.results)
+          setServerTotal(res.data.count)
+        } else {
+          setPatients(res.data)
+          setServerTotal(res.data.length)
+        }
+      })
+      .catch(() => {
+        setPatients([])
+        setServerTotal(0)
+      })
       .finally(() => setLoading(false))
   }, [search])
 
-  useEffect(() => {
-    fetchPatients()
-  }, [fetchPatients])
+  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(patients, {
+    isServerSide: true,
+    totalItems: serverTotal
+  })
 
-  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(patients)
+  useEffect(() => {
+    fetchPatients(currentPage)
+  }, [fetchPatients, currentPage])
 
   const columns = [
     {
@@ -90,7 +106,7 @@ const StaffPatientsPage = () => {
               </button>
             )}
             <span className="ml-auto text-xs text-gray-400">
-              {loading ? 'Loading...' : `${patients.length} patient${patients.length !== 1 ? 's' : ''}`}
+              {loading ? 'Loading...' : `${totalItems} patient${totalItems !== 1 ? 's' : ''}`}
             </span>
           </div>
         </div>

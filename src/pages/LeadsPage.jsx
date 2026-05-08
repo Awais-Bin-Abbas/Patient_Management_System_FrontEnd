@@ -558,7 +558,7 @@ const LeadsPage = () => {
               </div>
             </div>
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-              <Table columns={allColumns} data={paginatedAll} loading={loading} emptyMessage="No leads found." />
+              <Table columns={allColumns} data={paginatedAll} emptyMessage="No leads found." />
               <Pagination
                 currentPage={pageAll}
                 totalPages={totalPagesAll}
@@ -591,7 +591,6 @@ const LeadsPage = () => {
               <Table
                 columns={priorityColumns}
                 data={paginatedPriority}
-                loading={loading}
                 emptyMessage="No active leads to rank."
               />
               <Pagination

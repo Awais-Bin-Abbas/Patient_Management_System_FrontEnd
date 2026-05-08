@@ -344,7 +344,6 @@ const SuperAdminLeadsPage = () => {
             <Table
               columns={allColumns}
               data={paginatedAll}
-              loading={loading}
               emptyMessage="No leads found."
             />
             <Pagination
@@ -378,7 +377,6 @@ const SuperAdminLeadsPage = () => {
               <Table
                 columns={priorityColumns}
                 data={paginatedPriority}
-                loading={loading}
                 emptyMessage="No active leads to rank."
               />
               <Pagination

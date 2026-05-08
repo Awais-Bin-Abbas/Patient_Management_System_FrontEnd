@@ -158,7 +158,6 @@ const StaffLeadsPage = () => {
           <Table
             columns={columns}
             data={paginated}
-            loading={loading}
             emptyMessage="No leads found."
           />
           <Pagination

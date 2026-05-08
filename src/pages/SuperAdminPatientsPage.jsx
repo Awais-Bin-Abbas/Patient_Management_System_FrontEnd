@@ -6,9 +6,10 @@ import Layout from '../components/Layout'
 import Table from '../components/Table'
 import Badge from '../components/Badge'
 import Pagination from '../components/Pagination'
-import usePagination from '../hooks/usePagination'
 import axiosInstance from '../api/axiosInstance'
 import { useSuperAdmin } from '../context/SuperAdminContext'
+
+const PAGE_SIZE = 20
 
 const SuperAdminPatientsPage = () => {
   const { selectHospital }            = useSuperAdmin()
@@ -20,11 +21,31 @@ const SuperAdminPatientsPage = () => {
   const [hospitalFilter, setHospitalFilter] = useState('')
   const [search, setSearch]           = useState('')
   const [chronicFilter, setChronicFilter]   = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages]   = useState(1)
+  const [totalItems, setTotalItems]   = useState(0)
 
-  const fetchPatients = () => {
+  const fetchPatients = (page) => {
     setLoading(true)
-    axiosInstance.get('/api/superadmin/all-patients/')
-      .then(res => setPatients(res.data))
+    const params = new URLSearchParams({ page })
+    if (search)        params.append('search',      search)
+    if (hospitalFilter) params.append('hospital_id', hospitalFilter)
+    if (chronicFilter !== '') params.append('is_chronic', chronicFilter)
+
+    axiosInstance.get(`/api/superadmin/all-patients/?${params}`)
+      .then(res => {
+        const data = res.data
+        if (data.results !== undefined) {
+          setPatients(data.results)
+          setTotalPages(data.total_pages ?? Math.ceil((data.count ?? 0) / PAGE_SIZE))
+          setTotalItems(data.count ?? data.total_items ?? data.results.length)
+        } else {
+          // plain array fallback (non-paginated API)
+          setPatients(Array.isArray(data) ? data : [])
+          setTotalPages(1)
+          setTotalItems(Array.isArray(data) ? data.length : 0)
+        }
+      })
       .catch(() => setError('Failed to load patients.'))
       .finally(() => setLoading(false))
   }
@@ -35,8 +56,23 @@ const SuperAdminPatientsPage = () => {
       .catch(() => {})
   }
 
+  // Re-fetch when page changes
   useEffect(() => {
-    fetchPatients()
+    fetchPatients(currentPage)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage])
+
+  // Reset to page 1 and re-fetch when filters change
+  useEffect(() => {
+    if (currentPage === 1) {
+      fetchPatients(1)
+    } else {
+      setCurrentPage(1) // triggers the above effect
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, hospitalFilter, chronicFilter])
+
+  useEffect(() => {
     fetchHospitals()
   }, [])
 
@@ -46,24 +82,6 @@ const SuperAdminPatientsPage = () => {
     selectHospital({ id: patient.hospital_id, name: patient.hospital_name })
     navigate('/patients')
   }
-
-  // ─── Filter ───────────────────────────────────────────────────────────────
-
-  const filtered = patients.filter(p => {
-    const matchesHospital = hospitalFilter
-      ? String(p.hospital_id) === hospitalFilter
-      : true
-    const matchesChronic = chronicFilter !== ''
-      ? String(p.is_chronic) === chronicFilter
-      : true
-    const matchesSearch = search
-      ? `${p.first_name} ${p.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
-        p.email?.toLowerCase().includes(search.toLowerCase())
-      : true
-    return matchesHospital && matchesChronic && matchesSearch
-  })
-
-  const { paginated, currentPage, totalPages, totalItems, pageSize, goToPage } = usePagination(filtered)
 
   // ─── Table Columns ────────────────────────────────────────────────────────
 
@@ -139,9 +157,7 @@ const SuperAdminPatientsPage = () => {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-800">All Patients</h3>
-            <p className="text-sm text-gray-500">
-              View patients across all hospitals
-            </p>
+            <p className="text-sm text-gray-500">View patients across all hospitals</p>
           </div>
         </div>
 
@@ -191,7 +207,7 @@ const SuperAdminPatientsPage = () => {
             </button>
           )}
           <span className="ml-auto text-xs text-gray-400">
-            {loading ? 'Loading...' : `${filtered.length} patients found`}
+            {loading ? 'Loading...' : `${totalItems} patients found`}
           </span>
         </div>
 
@@ -199,16 +215,16 @@ const SuperAdminPatientsPage = () => {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
           <Table
             columns={columns}
-            data={paginated}
+            data={patients}
             loading={loading}
             emptyMessage="No patients found."
           />
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={goToPage}
+            onPageChange={setCurrentPage}
             totalItems={totalItems}
-            pageSize={pageSize}
+            pageSize={PAGE_SIZE}
           />
         </div>
 

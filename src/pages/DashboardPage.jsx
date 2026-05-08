@@ -6,6 +6,7 @@ import Layout from '../components/Layout'
 import StatCard from '../components/StatCard'
 import Loader from '../components/Loader'
 import Button from '../components/Button'
+import Table from '../components/Table'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
 import { useSuperAdmin } from '../context/SuperAdminContext'
@@ -19,6 +20,36 @@ const DashboardPage = () => {
   const [data, setData]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
+  const [seedCount, setSeedCount] = useState(50)
+  const [seedResult, setSeedResult] = useState(null)
+  const [seedLoading, setSeedLoading] = useState(false)
+  const [seedError, setSeedError] = useState('')
+
+  const handleSeedPatients = async () => {
+    setSeedError('')
+    setSeedResult(null)
+    const count = Number(seedCount)
+
+    if (Number.isNaN(count) || count < 1 || count > 500) {
+      setSeedError('Count must be a number between 1 and 500.')
+      return
+    }
+
+    setSeedLoading(true)
+    try {
+      const response = await axiosInstance.post('/api/superadmin/seed-patients/', { count })
+      setSeedResult(response.data)
+    } catch (err) {
+      const msg =
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        `Status ${err.response?.status}: ${JSON.stringify(err.response?.data)}` ||
+        'Failed to seed patients.'
+      setSeedError(msg)
+    } finally {
+      setSeedLoading(false)
+    }
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -122,6 +153,66 @@ const DashboardPage = () => {
                   <div className="text-4xl">✅</div>
                 </div>
               </div>
+            </div>
+
+            {/* Seed Patients */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Seed Patients</h3>
+                  <p className="text-sm text-gray-500">
+                    Generate new patient records across active hospitals.
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <label className="flex flex-col text-sm text-gray-700">
+                    <span className="mb-1">Count</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="500"
+                      value={seedCount}
+                      onChange={(e) => setSeedCount(e.target.value)}
+                      className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
+                    />
+                  </label>
+                  <Button
+                    variant="success"
+                    onClick={handleSeedPatients}
+                    loading={seedLoading}
+                  >
+                    Seed Patients
+                  </Button>
+                </div>
+              </div>
+
+              {seedError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
+                  {seedError}
+                </div>
+              )}
+
+              {seedResult && (
+                <div className="space-y-4">
+                  <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-700">
+                    <p className="font-medium text-gray-900">Seed result</p>
+                    <p>Created: <strong>{seedResult.created}</strong></p>
+                    <p>Skipped: <strong>{seedResult.skipped}</strong></p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3">Patients by Hospital</h4>
+                    <Table
+                      columns={[
+                        { key: 'hospital', label: 'Hospital' },
+                        { key: 'total_patients', label: 'Total Patients' },
+                      ]}
+                      data={seedResult.distribution || []}
+                      emptyMessage="No hospital distribution available."
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* CTA */}
